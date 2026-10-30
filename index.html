@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fotos</title>
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0d10">
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0b0d10; color: #f1f3f5; }
+      * { box-sizing: border-box; }
+      body { margin: 0; -webkit-font-smoothing: antialiased; }
+      main { max-width: 1680px; margin: auto; padding: 28px 16px 64px; }
+      header { margin-bottom: 24px; padding-bottom: 24px; }
+      p { margin: 0; }
+      #event-name { font-size: clamp(26px, 3vw, 38px); font-weight: 550; letter-spacing: -.045em; line-height: 1.15; }
+      button { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+      button:focus-visible { outline: 2px solid #b1ccff; outline-offset: 5px; }
+      .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 8px; }
+      .photo-grid + .photo-grid { margin-top: clamp(48px, 6vw, 88px); }
+      .photo-grid button { min-width: 0; border-radius: 8px; contain: layout paint; }
+      .photo-grid img { display: block; width: 100%; height: auto; aspect-ratio: auto 4 / 3; border-radius: 8px; }
+      [hidden] { display: none !important; }
+      html:has(dialog[open]) { overflow: hidden; }
+      dialog { position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; padding: 0; background: #08090c; color: #f1f3f5; }
+      dialog::backdrop { background: #08090c; }
+      .viewer-content { position: relative; display: grid; height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; }
+      dialog form { display: flex; justify-content: flex-end; padding: max(12px, env(safe-area-inset-top)) 16px 12px; }
+      dialog button { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid #ffffff22; border-radius: 50%; background: #15181e; touch-action: manipulation; }
+      #photo-stage { position: relative; min-height: 0; padding: 0 12px; touch-action: pan-y pinch-zoom; overflow: hidden; }
+      #photo-frame { height: 100%; width: 100%; transition: transform 140ms ease-out; }
+      #photo-frame.dragging { transition: none; }
+      #full-photo { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+      #photo-error { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 8px; background: #15181e; font-size: 14px; text-align: center; }
+      .viewer-controls { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 20px 16px max(20px, env(safe-area-inset-bottom)); }
+      #position { min-width: 88px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; color: #a3aab8; }
+      @media (min-width: 640px) {
+        main { padding: 44px 32px 80px; }
+        header { margin-bottom: 32px; padding-bottom: 28px; }
+        .photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+      }
+      @media (min-width: 900px) {
+        #photo-stage { padding: 0 88px; }
+        #previous, #next { position: absolute; top: 50%; z-index: 1; transform: translateY(-50%); width: 52px; height: 52px; }
+        #previous { left: 20px; }
+        #next { right: 20px; }
+      }
+      @media (min-width: 1200px) {
+        main { padding-inline: 48px; }
+        .photo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      }
+      @media (prefers-reduced-motion: reduce) { #photo-frame { transition: none; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p id="event-name">Feira de Profissões 2026</p>
+      </header>
+      <div id="gallery">
+        <div id="noite" class="photo-grid" aria-label="Noite">
+          <button type="button" data-index="0" data-id="1" aria-label="Abrir foto 1" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=16m0XYXzm9ACpeD-ipz4txfperF5Oxl2M&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=16m0XYXzm9ACpeD-ipz4txfperF5Oxl2M&amp;sz=w1600" alt="" loading="eager" decoding="async" fetchpriority="high">
+          </button>
+          <button type="button" data-index="1" data-id="2" aria-label="Abrir foto 2" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1KU-WEmRnAluvRXfmBhPem7ZS1wa52Z5h&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1KU-WEmRnAluvRXfmBhPem7ZS1wa52Z5h&amp;sz=w1600" alt="" loading="eager" decoding="async">
+          </button>
+          <button type="button" data-index="2" data-id="3" aria-label="Abrir foto 3" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1UcLGi3BCd_aGRUgUwYQTZXXjRdrPAiAX&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1UcLGi3BCd_aGRUgUwYQTZXXjRdrPAiAX&amp;sz=w1600" alt="" loading="eager" decoding="async">
+          </button>
+          <button type="button" data-index="3" data-id="4" aria-label="Abrir foto 4" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1q84dbAx7QOSpLn8UCAN58UakZzVe_vF1&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1q84dbAx7QOSpLn8UCAN58UakZzVe_vF1&amp;sz=w1600" alt="" loading="eager" decoding="async">
+          </button>
+          <button type="button" data-index="4" data-id="5" aria-label="Abrir foto 5" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=16LFygp5HVl20yuaonf5skpKpw_nBR-51&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=16LFygp5HVl20yuaonf5skpKpw_nBR-51&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="5" data-id="6" aria-label="Abrir foto 6" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1JmksZLeesNkQcyQob6poTDxWoQxbPpFO&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1JmksZLeesNkQcyQob6poTDxWoQxbPpFO&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="6" data-id="7" aria-label="Abrir foto 7" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1XvRRTNhJBKC218Gl41nUVAdpGsEnWQ8f&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1XvRRTNhJBKC218Gl41nUVAdpGsEnWQ8f&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="7" data-id="8" aria-label="Abrir foto 8" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1j2wa66w1t8z9I2Sdahw-0nn6diw0KWSP&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1j2wa66w1t8z9I2Sdahw-0nn6diw0KWSP&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="8" data-id="9" aria-label="Abrir foto 9" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nN8pj7_vaAQm0LKCLvuTi3zXBp2PEOal&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nN8pj7_vaAQm0LKCLvuTi3zXBp2PEOal&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="9" data-id="a" aria-label="Abrir foto a" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1tbJpiioFH5Fxk6V3HDZRjWLUgU5PZEWe&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1tbJpiioFH5Fxk6V3HDZRjWLUgU5PZEWe&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="10" data-id="b" aria-label="Abrir foto b" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1wEGVcvVIdjgst9wyTkv3brcTooJixv1K&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1wEGVcvVIdjgst9wyTkv3brcTooJixv1K&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="11" data-id="c" aria-label="Abrir foto c" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1xT25l6YwXLMOfWbLXC7PycNhss9yFZ_0&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1xT25l6YwXLMOfWbLXC7PycNhss9yFZ_0&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="12" data-id="d" aria-label="Abrir foto d" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=18c-gmwfTtgBRYXcTjzG92E0svtp98AxJ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=18c-gmwfTtgBRYXcTjzG92E0svtp98AxJ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="13" data-id="e" aria-label="Abrir foto e" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1T4lYhcypA-TTL9J8ypDzI1k7AqsTkkMA&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1T4lYhcypA-TTL9J8ypDzI1k7AqsTkkMA&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="14" data-id="f" aria-label="Abrir foto f" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1TBNxY0XlRkOdabc1QgRX7_VySA46gS_n&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1TBNxY0XlRkOdabc1QgRX7_VySA46gS_n&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="15" data-id="g" aria-label="Abrir foto g" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1m2XcyiyOJSNoQ-WnMyxrYDrjCE4NSNB5&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1m2XcyiyOJSNoQ-WnMyxrYDrjCE4NSNB5&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="16" data-id="h" aria-label="Abrir foto h" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1ozHCJ49-sV1tkSXZPNgpiVhMK91xNx07&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1ozHCJ49-sV1tkSXZPNgpiVhMK91xNx07&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="17" data-id="i" aria-label="Abrir foto i" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1szBh5ofWRaT223o4QLBTOQ94K0wU9EP8&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1szBh5ofWRaT223o4QLBTOQ94K0wU9EP8&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="18" data-id="j" aria-label="Abrir foto j" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1yoCEyhewMstA_AKJHApuhjgxH8TreIfd&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1yoCEyhewMstA_AKJHApuhjgxH8TreIfd&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="19" data-id="k" aria-label="Abrir foto k" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=12o2CK_Qc6Rrldx4o7Prx0r_99CymvDT6&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=12o2CK_Qc6Rrldx4o7Prx0r_99CymvDT6&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="20" data-id="l" aria-label="Abrir foto l" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1GqQnNfZlWJVMgjDWvw-8dRCgfVATiBe9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1GqQnNfZlWJVMgjDWvw-8dRCgfVATiBe9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="21" data-id="m" aria-label="Abrir foto m" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1GrQwwYPecniQoX6iX9oIYm4iweJxhv8N&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1GrQwwYPecniQoX6iX9oIYm4iweJxhv8N&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="22" data-id="n" aria-label="Abrir foto n" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1LZb2uef9HH8ofiTIqe0yY-K4VeRmVf3-&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1LZb2uef9HH8ofiTIqe0yY-K4VeRmVf3-&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="23" data-id="o" aria-label="Abrir foto o" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1P7UNigN_wJ1U_D7eCeUpfXi12lnUYkOQ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1P7UNigN_wJ1U_D7eCeUpfXi12lnUYkOQ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="24" data-id="p" aria-label="Abrir foto p" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Q-3jgkn0qeGH63zpD2DG2rDc_wbf2wiQ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Q-3jgkn0qeGH63zpD2DG2rDc_wbf2wiQ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="25" data-id="q" aria-label="Abrir foto q" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1fC0UK-tx-NhTVp1mH92X1u3SQwoRzNAy&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1fC0UK-tx-NhTVp1mH92X1u3SQwoRzNAy&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="26" data-id="r" aria-label="Abrir foto r" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1geGA62tg1_RhZG2ru8yPqBq19FxHztH0&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1geGA62tg1_RhZG2ru8yPqBq19FxHztH0&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="27" data-id="s" aria-label="Abrir foto s" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1u8lv5iAIzwMYVcU-43RaW8yBXWhXDvlO&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1u8lv5iAIzwMYVcU-43RaW8yBXWhXDvlO&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="28" data-id="t" aria-label="Abrir foto t" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1-_1-6HY-B3BhFP2RaxDctujvSxxQPqOS&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1-_1-6HY-B3BhFP2RaxDctujvSxxQPqOS&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="29" data-id="u" aria-label="Abrir foto u" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1CZ4l_4UX9uo3fHMGMv5LMw5c9-kP_ZJB&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1CZ4l_4UX9uo3fHMGMv5LMw5c9-kP_ZJB&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="30" data-id="v" aria-label="Abrir foto v" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Eyql4JkkH91_xgYh2Jb4z9FkQVNS6sme&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Eyql4JkkH91_xgYh2Jb4z9FkQVNS6sme&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="31" data-id="w" aria-label="Abrir foto w" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1P6H20b236_n8iy87f5gDTxPMmMt9X-BJ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1P6H20b236_n8iy87f5gDTxPMmMt9X-BJ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="32" data-id="x" aria-label="Abrir foto x" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1TFwLhp3l6vfzLYPSMXZx2FKeZoE6iAGH&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1TFwLhp3l6vfzLYPSMXZx2FKeZoE6iAGH&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="33" data-id="y" aria-label="Abrir foto y" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1XM9KfoPe8gmQV3gvabUr7tPeiE84MM7S&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1XM9KfoPe8gmQV3gvabUr7tPeiE84MM7S&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="34" data-id="z" aria-label="Abrir foto z" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1enFHNfh2fQKD4J34fWqVPYto-2uTfgm9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1enFHNfh2fQKD4J34fWqVPYto-2uTfgm9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="35" data-id="10" aria-label="Abrir foto 10" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1vnwjloq6DV0-9dEA0ySoEak54VtxcFQy&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1vnwjloq6DV0-9dEA0ySoEak54VtxcFQy&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="36" data-id="11" aria-label="Abrir foto 11" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1wEPY5mYLEqhZ93g0DmBFwtRgogrsj_Nu&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1wEPY5mYLEqhZ93g0DmBFwtRgogrsj_Nu&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="37" data-id="12" aria-label="Abrir foto 12" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=17Rqt1XFzhPWZmJnQiCbufEdLjUrPMel9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=17Rqt1XFzhPWZmJnQiCbufEdLjUrPMel9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="38" data-id="13" aria-label="Abrir foto 13" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1KFfUaKHDeV9_GZ4_c5XlT5oNK1W9P2GU&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1KFfUaKHDeV9_GZ4_c5XlT5oNK1W9P2GU&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="39" data-id="14" aria-label="Abrir foto 14" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1QFrLltEt0-rdRNOcs0IKcD9HhodU9ULV&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1QFrLltEt0-rdRNOcs0IKcD9HhodU9ULV&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="40" data-id="15" aria-label="Abrir foto 15" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1c6mIbpHGxPL30G0bFw5E33a5A57rkg7b&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1c6mIbpHGxPL30G0bFw5E33a5A57rkg7b&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="41" data-id="16" aria-label="Abrir foto 16" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1ec_8WdXD1QwFrMiHaTJ_2ZbVi21-giCZ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1ec_8WdXD1QwFrMiHaTJ_2ZbVi21-giCZ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="42" data-id="17" aria-label="Abrir foto 17" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1hlAiGp1WgXgXWTkOqNgGTV1DTkZ8IQ3d&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1hlAiGp1WgXgXWTkOqNgGTV1DTkZ8IQ3d&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="43" data-id="18" aria-label="Abrir foto 18" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1jbvLF6TTCOZxqXQIWMry0it0hA55WHTC&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1jbvLF6TTCOZxqXQIWMry0it0hA55WHTC&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="44" data-id="19" aria-label="Abrir foto 19" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1mEiBAiNLXcMzyrwL6KL9xRyOG944mF5M&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1mEiBAiNLXcMzyrwL6KL9xRyOG944mF5M&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="45" data-id="1a" aria-label="Abrir foto 1a" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=12oy4r2fgNeeZEsmJlAGPgxxUr_9QwU67&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=12oy4r2fgNeeZEsmJlAGPgxxUr_9QwU67&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="46" data-id="1b" aria-label="Abrir foto 1b" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=194pq_5S6OqAPpjxnrZn_LfB94TDg4blh&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=194pq_5S6OqAPpjxnrZn_LfB94TDg4blh&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="47" data-id="1c" aria-label="Abrir foto 1c" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1glwDZztfI9Q8psonc4ShgpYk5tW6l1iI&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1glwDZztfI9Q8psonc4ShgpYk5tW6l1iI&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="48" data-id="1d" aria-label="Abrir foto 1d" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1hyCuMAleFw4FZeh2EBiMLdQ2Iwqa2HZo&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1hyCuMAleFw4FZeh2EBiMLdQ2Iwqa2HZo&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="49" data-id="1e" aria-label="Abrir foto 1e" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1k67VF-JG6uw2yt94GRXN_f6caKuuf4gm&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1k67VF-JG6uw2yt94GRXN_f6caKuuf4gm&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="50" data-id="1f" aria-label="Abrir foto 1f" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1kRMRzSDaumQxMxQiyKQMYCWEN_V2lADT&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1kRMRzSDaumQxMxQiyKQMYCWEN_V2lADT&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="51" data-id="1g" aria-label="Abrir foto 1g" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1xoKruCUjQXkjoNK9dYIEpiVUv7Ec1j9S&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1xoKruCUjQXkjoNK9dYIEpiVUv7Ec1j9S&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="52" data-id="1h" aria-label="Abrir foto 1h" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Ats-3jjeiXuGKr3o3O6UXGqOoJNWJwrY&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Ats-3jjeiXuGKr3o3O6UXGqOoJNWJwrY&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="53" data-id="1i" aria-label="Abrir foto 1i" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1By6oAw-Ncnrjqeo2QTd9kBtELCO91MQL&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1By6oAw-Ncnrjqeo2QTd9kBtELCO91MQL&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="54" data-id="1j" aria-label="Abrir foto 1j" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1GsUjH87S14ZhZwU3H5xdEbq_Ku5mZ7Ca&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1GsUjH87S14ZhZwU3H5xdEbq_Ku5mZ7Ca&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="55" data-id="1k" aria-label="Abrir foto 1k" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1OoRexLp0HFaIWC0JODWOQWhUa9s2ErRX&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1OoRexLp0HFaIWC0JODWOQWhUa9s2ErRX&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="56" data-id="1l" aria-label="Abrir foto 1l" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1U4Kl6EnzJVYhj3hUh1QqOJA8gN6cGqZE&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1U4Kl6EnzJVYhj3hUh1QqOJA8gN6cGqZE&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="57" data-id="1m" aria-label="Abrir foto 1m" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nGFxEp-0sy9mkfsoxP5eojIYl5HB2yNi&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nGFxEp-0sy9mkfsoxP5eojIYl5HB2yNi&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="58" data-id="1n" aria-label="Abrir foto 1n" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nQJeeQ5At69YA-dqGNMW3MdbUP--qiof&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nQJeeQ5At69YA-dqGNMW3MdbUP--qiof&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="59" data-id="1o" aria-label="Abrir foto 1o" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1tL1Mjd1USKgm7Sby7-r-axFQ3j0obWan&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1tL1Mjd1USKgm7Sby7-r-axFQ3j0obWan&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="60" data-id="1p" aria-label="Abrir foto 1p" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=17P7JWTxwbpEu3-vz5z5LSeXXy3Yk5stH&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=17P7JWTxwbpEu3-vz5z5LSeXXy3Yk5stH&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="61" data-id="1q" aria-label="Abrir foto 1q" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1DhLtlW0LtRaRPV-eabTOoJG6WqcxDiJr&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1DhLtlW0LtRaRPV-eabTOoJG6WqcxDiJr&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="62" data-id="1r" aria-label="Abrir foto 1r" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1FRIjy9BETM4_sOGwKPt4bTNcg4JQLL5C&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1FRIjy9BETM4_sOGwKPt4bTNcg4JQLL5C&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="63" data-id="1s" aria-label="Abrir foto 1s" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Fte9T0Gw0Y0SJj_fJhc3aeAbL4dMZnBW&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Fte9T0Gw0Y0SJj_fJhc3aeAbL4dMZnBW&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="64" data-id="1t" aria-label="Abrir foto 1t" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1H93hM4DqJ264onaSSpsAaU63yk1L9XU9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1H93hM4DqJ264onaSSpsAaU63yk1L9XU9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="65" data-id="1u" aria-label="Abrir foto 1u" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1N6M38orRTe7rIiw-UseepBzJKqGTMWzS&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1N6M38orRTe7rIiw-UseepBzJKqGTMWzS&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="66" data-id="1v" aria-label="Abrir foto 1v" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1XkACSrvvZ12RxN0YzVjq0D5syZHUxP21&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1XkACSrvvZ12RxN0YzVjq0D5syZHUxP21&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="67" data-id="1w" aria-label="Abrir foto 1w" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1oUq-ziuf7RcCv5XiFw65zIZ7VxaaHx8y&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1oUq-ziuf7RcCv5XiFw65zIZ7VxaaHx8y&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="68" data-id="1x" aria-label="Abrir foto 1x" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1t85oS5ix1KOuaqv10OfroN9UoNGziBQc&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1t85oS5ix1KOuaqv10OfroN9UoNGziBQc&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="69" data-id="1y" aria-label="Abrir foto 1y" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=12QZ6o1pQvZfOtAlutF65Qu8SO2YEWlV9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=12QZ6o1pQvZfOtAlutF65Qu8SO2YEWlV9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="70" data-id="1z" aria-label="Abrir foto 1z" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1956f1jxbgXA-1adcnRyA9UgAyW4kZOdo&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1956f1jxbgXA-1adcnRyA9UgAyW4kZOdo&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="71" data-id="20" aria-label="Abrir foto 20" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1DbGRddTmRY03cWKidnR8M-iCB4Xl9MLt&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1DbGRddTmRY03cWKidnR8M-iCB4Xl9MLt&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="72" data-id="21" aria-label="Abrir foto 21" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1ESyzDAz3NlwDQwP9nY3UCgUGPnXsAdje&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1ESyzDAz3NlwDQwP9nY3UCgUGPnXsAdje&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="73" data-id="22" aria-label="Abrir foto 22" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1OmY2cyDQin5hJO-hLMYWBEk54SGJ4BMd&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1OmY2cyDQin5hJO-hLMYWBEk54SGJ4BMd&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="74" data-id="23" aria-label="Abrir foto 23" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1TeZxKb_qETwdkiP26EgWhlJJxaiwDQAH&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1TeZxKb_qETwdkiP26EgWhlJJxaiwDQAH&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="75" data-id="24" aria-label="Abrir foto 24" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1XRi_KNqnK0uzlB-Ar550iZ82fwFlTJkA&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1XRi_KNqnK0uzlB-Ar550iZ82fwFlTJkA&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="76" data-id="25" aria-label="Abrir foto 25" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1bawuszPLMi9b_xQKT5m5vpE_fE4rG763&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1bawuszPLMi9b_xQKT5m5vpE_fE4rG763&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="77" data-id="26" aria-label="Abrir foto 26" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1kaysP_lTfvOE932MJz0cqy1OkSoafS8I&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1kaysP_lTfvOE932MJz0cqy1OkSoafS8I&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="78" data-id="27" aria-label="Abrir foto 27" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1BsjkGnVqU1tNi3xW6RyEL1dYz6y5HBAr&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1BsjkGnVqU1tNi3xW6RyEL1dYz6y5HBAr&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="79" data-id="28" aria-label="Abrir foto 28" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1JXQIWQZdk3w1DIJxw2sUeLAJpleup9Aq&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1JXQIWQZdk3w1DIJxw2sUeLAJpleup9Aq&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="80" data-id="29" aria-label="Abrir foto 29" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1KlSYaEZgr9lPari3ue2kAquD1wR2ZcDY&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1KlSYaEZgr9lPari3ue2kAquD1wR2ZcDY&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="81" data-id="2a" aria-label="Abrir foto 2a" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1_MDbD2UDtc28mgSrC0yhuLDQor0mDG23&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1_MDbD2UDtc28mgSrC0yhuLDQor0mDG23&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="82" data-id="2b" aria-label="Abrir foto 2b" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1hRhk4_ndJ73zg39EKpEoXgPG0e5BMV6F&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1hRhk4_ndJ73zg39EKpEoXgPG0e5BMV6F&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="83" data-id="2c" aria-label="Abrir foto 2c" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nhvInRf6uMJvv6XHIM3p7A7fexwsJ9Rj&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nhvInRf6uMJvv6XHIM3p7A7fexwsJ9Rj&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+        </div>
+        <div id="manha" class="photo-grid" aria-label="Manhã">
+          <button type="button" data-index="84" data-id="2d" aria-label="Abrir foto 2d" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=18waPGhI82hMSiOr8Jt2mWvXIh5gMzutq&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=18waPGhI82hMSiOr8Jt2mWvXIh5gMzutq&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="85" data-id="2e" aria-label="Abrir foto 2e" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1B9M-m4GSsRlf8qf0u-Yko96yczhrPJ8Y&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1B9M-m4GSsRlf8qf0u-Yko96yczhrPJ8Y&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="86" data-id="2f" aria-label="Abrir foto 2f" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1fPKEf2tqaiyP_YsGYB0A9JC1pU2Iwo7B&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1fPKEf2tqaiyP_YsGYB0A9JC1pU2Iwo7B&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="87" data-id="2g" aria-label="Abrir foto 2g" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1gLLvXF7NpOmjwsek4jxYYeTTVxl6GeNg&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1gLLvXF7NpOmjwsek4jxYYeTTVxl6GeNg&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="88" data-id="2h" aria-label="Abrir foto 2h" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1gOVyKpufWpcJzImRu1vdfV3oauiT28HA&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1gOVyKpufWpcJzImRu1vdfV3oauiT28HA&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="89" data-id="2i" aria-label="Abrir foto 2i" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1u6ChsbN3IkgcrRyVApwXUS8debXnlPCa&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1u6ChsbN3IkgcrRyVApwXUS8debXnlPCa&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="90" data-id="2j" aria-label="Abrir foto 2j" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=12vNb5IrO-f8zichL0G7z8YkigYffOugT&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=12vNb5IrO-f8zichL0G7z8YkigYffOugT&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="91" data-id="2k" aria-label="Abrir foto 2k" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1CIjYZe1wWnP1EGNbb6OMKGnYXAQ1o3Ly&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1CIjYZe1wWnP1EGNbb6OMKGnYXAQ1o3Ly&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="92" data-id="2l" aria-label="Abrir foto 2l" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1FB8kNHQOliz2psY2x7Vcm0RPmqnGVR0g&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1FB8kNHQOliz2psY2x7Vcm0RPmqnGVR0g&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="93" data-id="2m" aria-label="Abrir foto 2m" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1KYXeUXEaAQ-dvUDCtYFPsC_edA6o1xAF&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1KYXeUXEaAQ-dvUDCtYFPsC_edA6o1xAF&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="94" data-id="2n" aria-label="Abrir foto 2n" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1OQqmmWE6zZj5XezwRA2lq0ucuE_7N4nm&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1OQqmmWE6zZj5XezwRA2lq0ucuE_7N4nm&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="95" data-id="2o" aria-label="Abrir foto 2o" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1WLJ_HGHbbjOzVPnwWY56ukAxqihZfy7f&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1WLJ_HGHbbjOzVPnwWY56ukAxqihZfy7f&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="96" data-id="2p" aria-label="Abrir foto 2p" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1X1nUm3SpSjhta0EqZZ2aCbe3Ou1PKHXj&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1X1nUm3SpSjhta0EqZZ2aCbe3Ou1PKHXj&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="97" data-id="2q" aria-label="Abrir foto 2q" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1YhQPmtp9B-X4X1OSUO_6iYMk-QUlUXGI&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1YhQPmtp9B-X4X1OSUO_6iYMk-QUlUXGI&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="98" data-id="2r" aria-label="Abrir foto 2r" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1zx8hfSFxtXesE2s1S-OgC63bI9VqrL16&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1zx8hfSFxtXesE2s1S-OgC63bI9VqrL16&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="99" data-id="2s" aria-label="Abrir foto 2s" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=13PFvsgDPdWnNXVWlXh-UkbByBS0s9yvy&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=13PFvsgDPdWnNXVWlXh-UkbByBS0s9yvy&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="100" data-id="2t" aria-label="Abrir foto 2t" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=13q7aqE2KyU24IbCfmJqhTJ6-RuJzVFZw&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=13q7aqE2KyU24IbCfmJqhTJ6-RuJzVFZw&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="101" data-id="2u" aria-label="Abrir foto 2u" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1IkgpVTpv6Bs38G1ByqiFRJ2D3nq5xuj3&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1IkgpVTpv6Bs38G1ByqiFRJ2D3nq5xuj3&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="102" data-id="2v" aria-label="Abrir foto 2v" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Q2j0Xb8E7E16xVapQAK69pF4rjjpywGO&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Q2j0Xb8E7E16xVapQAK69pF4rjjpywGO&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="103" data-id="2w" aria-label="Abrir foto 2w" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1VFyvlssl6Jm-W81_6jSKZlb3xxHF8Bta&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1VFyvlssl6Jm-W81_6jSKZlb3xxHF8Bta&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="104" data-id="2x" aria-label="Abrir foto 2x" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1ZT8p51FFhDy8A_n_X7d_LlUqNbaPD_fS&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1ZT8p51FFhDy8A_n_X7d_LlUqNbaPD_fS&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="105" data-id="2y" aria-label="Abrir foto 2y" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1orN-45aaL1w1_fwSLoWksYlhgL1HcLuq&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1orN-45aaL1w1_fwSLoWksYlhgL1HcLuq&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="106" data-id="2z" aria-label="Abrir foto 2z" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1whM9p3G30Zxvlf8oT7EyZ_ewsR419TYP&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1whM9p3G30Zxvlf8oT7EyZ_ewsR419TYP&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="107" data-id="30" aria-label="Abrir foto 30" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=15Hywt1WV4CqIoX0_VwwX9QILXPKvi0-0&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=15Hywt1WV4CqIoX0_VwwX9QILXPKvi0-0&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="108" data-id="31" aria-label="Abrir foto 31" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=18uGSm4Em7VX4nDI814W4XsGVrXWak0J9&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=18uGSm4Em7VX4nDI814W4XsGVrXWak0J9&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="109" data-id="32" aria-label="Abrir foto 32" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1M2yKb0-ZCFUReXQp-dOaOmCSIGAZfo7L&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1M2yKb0-ZCFUReXQp-dOaOmCSIGAZfo7L&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="110" data-id="33" aria-label="Abrir foto 33" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1PcCuuRrGZFsUYHyynuFG3PKztTjyNOBl&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1PcCuuRrGZFsUYHyynuFG3PKztTjyNOBl&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="111" data-id="34" aria-label="Abrir foto 34" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1hqNES3TL8tKAqWO-2aXiD-rUEJ4OKEkR&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1hqNES3TL8tKAqWO-2aXiD-rUEJ4OKEkR&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="112" data-id="35" aria-label="Abrir foto 35" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1lN1glRlNNTgZt5iRibcodvHVaJ6uZJYm&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1lN1glRlNNTgZt5iRibcodvHVaJ6uZJYm&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="113" data-id="36" aria-label="Abrir foto 36" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nG2nvIRJnA7qoXl9PRmlfK6Qgx5LDc9m&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nG2nvIRJnA7qoXl9PRmlfK6Qgx5LDc9m&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="114" data-id="37" aria-label="Abrir foto 37" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1AGvkFKB_OUsXJIpfVy55aC0Xpm_vFJpI&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1AGvkFKB_OUsXJIpfVy55aC0Xpm_vFJpI&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="115" data-id="38" aria-label="Abrir foto 38" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1BLlGuQN0dmyHua19fVtluG-TXAZ8iEVD&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1BLlGuQN0dmyHua19fVtluG-TXAZ8iEVD&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="116" data-id="39" aria-label="Abrir foto 39" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Ba1DxUCkvDJEaksh--ML-wVxp1tG-9DP&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Ba1DxUCkvDJEaksh--ML-wVxp1tG-9DP&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="117" data-id="3a" aria-label="Abrir foto 3a" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Tori9BU3hrJQkB6gD8AF_Uzkw5QoOsh2&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Tori9BU3hrJQkB6gD8AF_Uzkw5QoOsh2&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="118" data-id="3b" aria-label="Abrir foto 3b" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1TyAorwP5KaV365n0kqswgeov0wgMS6ze&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1TyAorwP5KaV365n0kqswgeov0wgMS6ze&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="119" data-id="3c" aria-label="Abrir foto 3c" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1X4VKDqv0LrghujdfJzYczD_VXw-ZeKKd&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1X4VKDqv0LrghujdfJzYczD_VXw-ZeKKd&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="120" data-id="3d" aria-label="Abrir foto 3d" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1b70hBSe0GdLOreEzcOh6Jukl6g4p3sKD&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1b70hBSe0GdLOreEzcOh6Jukl6g4p3sKD&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="121" data-id="3e" aria-label="Abrir foto 3e" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1hqmI0UsWj34848_QX3FO61lVh7sw1Eq8&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1hqmI0UsWj34848_QX3FO61lVh7sw1Eq8&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="122" data-id="3f" aria-label="Abrir foto 3f" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1nZZsfI7yXMg4Q6k5mk2Pc4hBjWqUBmB5&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1nZZsfI7yXMg4Q6k5mk2Pc4hBjWqUBmB5&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="123" data-id="3g" aria-label="Abrir foto 3g" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=17qAx3zf6NtPjaGTZpUBJ8oO2e1D5IDPa&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=17qAx3zf6NtPjaGTZpUBJ8oO2e1D5IDPa&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="124" data-id="3h" aria-label="Abrir foto 3h" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=18A3s6WrREI87900BygocIr58FSBw3pV-&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=18A3s6WrREI87900BygocIr58FSBw3pV-&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="125" data-id="3i" aria-label="Abrir foto 3i" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Cp3BIol9_gCuwffSmoQfRTBzGsnqvx9D&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Cp3BIol9_gCuwffSmoQfRTBzGsnqvx9D&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="126" data-id="3j" aria-label="Abrir foto 3j" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1EltFH7JS43Lrc2W0HIm4eTkE8Ms0jBeZ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1EltFH7JS43Lrc2W0HIm4eTkE8Ms0jBeZ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="127" data-id="3k" aria-label="Abrir foto 3k" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1M0X_H7XiKmr9MEbuUhpSgMEiMQ-STUZX&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1M0X_H7XiKmr9MEbuUhpSgMEiMQ-STUZX&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="128" data-id="3l" aria-label="Abrir foto 3l" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1h_kzmB9w2bp7mmfF4NLIFIHJJn3Yfqno&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1h_kzmB9w2bp7mmfF4NLIFIHJJn3Yfqno&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="129" data-id="3m" aria-label="Abrir foto 3m" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1pCemwsS9ucFkvsvimYupHQG05Ex89uEL&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1pCemwsS9ucFkvsvimYupHQG05Ex89uEL&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="130" data-id="3n" aria-label="Abrir foto 3n" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1sbRP-MsMxrzPmtMKDOKy-OHJrZsuw1cb&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1sbRP-MsMxrzPmtMKDOKy-OHJrZsuw1cb&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="131" data-id="3o" aria-label="Abrir foto 3o" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=14A1OyJ1yeVvzPyquzB7rS2itosj2PsHZ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=14A1OyJ1yeVvzPyquzB7rS2itosj2PsHZ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="132" data-id="3p" aria-label="Abrir foto 3p" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1APx0yLoTuMaJQNd6YjuZ9pRFNT4wwQq5&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1APx0yLoTuMaJQNd6YjuZ9pRFNT4wwQq5&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="133" data-id="3q" aria-label="Abrir foto 3q" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1TGOysHeixg70M3eKoaVtS13tbKT0Veu-&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1TGOysHeixg70M3eKoaVtS13tbKT0Veu-&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="134" data-id="3r" aria-label="Abrir foto 3r" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Tzca-J7kECloqGKbzuVXE7FCMSeJooFN&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Tzca-J7kECloqGKbzuVXE7FCMSeJooFN&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="135" data-id="3s" aria-label="Abrir foto 3s" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Z20tBjyZHdbKYPuYoM-hjgzjbom6U277&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Z20tBjyZHdbKYPuYoM-hjgzjbom6U277&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="136" data-id="3t" aria-label="Abrir foto 3t" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1bkkJH-hL0IP-Q4P7U6TPDjaTF82kXow6&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1bkkJH-hL0IP-Q4P7U6TPDjaTF82kXow6&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="137" data-id="3u" aria-label="Abrir foto 3u" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1lbbz92CpQ5W8l7sp74J379c0JuJTYmq7&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1lbbz92CpQ5W8l7sp74J379c0JuJTYmq7&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="138" data-id="3v" aria-label="Abrir foto 3v" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1tnKhnlvGwdr7Pxa1RGmxIDg8zxvELEiM&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1tnKhnlvGwdr7Pxa1RGmxIDg8zxvELEiM&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="139" data-id="3w" aria-label="Abrir foto 3w" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=17xE_LrxPmSAh0FJDjTL7xeET39CfKEQW&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=17xE_LrxPmSAh0FJDjTL7xeET39CfKEQW&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="140" data-id="3x" aria-label="Abrir foto 3x" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1DERRpy3uamEz9L4VTCyYi_VOpuOpeGTL&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1DERRpy3uamEz9L4VTCyYi_VOpuOpeGTL&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="141" data-id="3y" aria-label="Abrir foto 3y" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1RH8CsuJheWiMoz9mZF42viQOVZIc-Pdy&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1RH8CsuJheWiMoz9mZF42viQOVZIc-Pdy&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="142" data-id="3z" aria-label="Abrir foto 3z" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1VqPteOLPE01lfJu6KJvlyeK3n_-3lTuz&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1VqPteOLPE01lfJu6KJvlyeK3n_-3lTuz&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="143" data-id="40" aria-label="Abrir foto 40" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1WT4cOnWCKQbq-_WpE5zifVIxsXvxBnkE&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1WT4cOnWCKQbq-_WpE5zifVIxsXvxBnkE&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="144" data-id="41" aria-label="Abrir foto 41" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1Wk0ikXKTuMh68i-xcMxLJ42fv5hO1ptl&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1Wk0ikXKTuMh68i-xcMxLJ42fv5hO1ptl&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="145" data-id="42" aria-label="Abrir foto 42" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1myCv9mEMlRwdAqZjD16mZVLhmCpTcKit&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1myCv9mEMlRwdAqZjD16mZVLhmCpTcKit&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="146" data-id="43" aria-label="Abrir foto 43" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1n3o6PbmI2oEef3Xc6J8CqCoY6T5rcS22&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1n3o6PbmI2oEef3Xc6J8CqCoY6T5rcS22&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="147" data-id="44" aria-label="Abrir foto 44" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1xRCXOlJ0RzIZoeFKTAmx-4vsUhuqP8LQ&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1xRCXOlJ0RzIZoeFKTAmx-4vsUhuqP8LQ&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+          <button type="button" data-index="148" data-id="45" aria-label="Abrir foto 45" aria-haspopup="dialog" aria-controls="viewer">
+            <img src="https://drive.google.com/thumbnail?id=1_ikj4lHaXfgGEATgwL_KFY9rWmY9AseO&amp;sz=w600" data-full="https://drive.google.com/thumbnail?id=1_ikj4lHaXfgGEATgwL_KFY9rWmY9AseO&amp;sz=w1600" alt="" loading="lazy" decoding="async">
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <dialog id="viewer" aria-label="Visualização da foto">
+      <div class="viewer-content">
+        <form method="dialog">
+          <button type="submit" autofocus aria-label="Fechar foto">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </form>
+        <div id="photo-stage">
+          <div id="photo-frame"><img id="full-photo" alt="" draggable="false"></div>
+          <p id="photo-error" role="status" hidden>Não foi possível carregar esta foto.</p>
+        </div>
+        <div class="viewer-controls">
+          <button id="previous" type="button" aria-label="Foto anterior">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m14 6-6 6 6 6"/></svg>
+          </button>
+          <p id="position" aria-live="polite" aria-atomic="true"></p>
+          <button id="next" type="button" aria-label="Próxima foto">
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m10 6 6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      const gallery = document.querySelector('#gallery');
+      const viewer = document.querySelector('#viewer');
+      const frame = document.querySelector('#photo-frame');
+      const stage = document.querySelector('#photo-stage');
+      const photoError = document.querySelector('#photo-error');
+      const position = document.querySelector('#position');
+      const photos = [...gallery.querySelectorAll('button[data-index]')];
+      let current = 0;
+      let revision = 0;
+      let detailTimer;
+      let pendingImage;
+      let gesture;
+
+      function cancelDetail() {
+        clearTimeout(detailTimer);
+        if (pendingImage) {
+          pendingImage.onload = pendingImage.onerror = null;
+          pendingImage.removeAttribute('src');
+          pendingImage = null;
+        }
+      }
+
+      function resetGesture() {
+        gesture = null;
+        frame.classList.remove('dragging');
+        frame.style.transform = '';
+      }
+
+      function showPhoto(index) {
+        cancelDetail();
+        resetGesture();
+        const request = ++revision;
+        current = (index + photos.length) % photos.length;
+        const thumbnail = photos[current].querySelector('img');
+        const preview = new Image();
+        preview.id = 'full-photo';
+        preview.alt = '';
+        preview.draggable = false;
+        preview.decoding = 'async';
+        preview.fetchPriority = 'high';
+        preview.onload = () => {
+          if (request === revision && frame.firstElementChild === preview) photoError.hidden = true;
+        };
+        preview.onerror = () => {
+          if (request === revision && frame.firstElementChild === preview) photoError.hidden = false;
+        };
+        preview.src = thumbnail.currentSrc || thumbnail.src;
+        frame.replaceChildren(preview);
+        photoError.hidden = true;
+        viewer.setAttribute('aria-label', `Foto ${photos[current].dataset.id}`);
+        position.textContent = `${current + 1} / ${photos.length}`;
+        stage.setAttribute('aria-busy', 'true');
+
+        // Rapid navigation uses the small preview; only the selected photo gets a large image.
+        detailTimer = setTimeout(() => {
+          if (!viewer.open || request !== revision) return;
+          const detail = new Image();
+          pendingImage = detail;
+          detail.id = 'full-photo';
+          detail.alt = '';
+          detail.draggable = false;
+          detail.decoding = 'async';
+          detail.fetchPriority = 'high';
+          detail.onload = async () => {
+            try { await detail.decode(); } catch { /* A loaded image can still be displayed. */ }
+            if (!viewer.open || request !== revision) return;
+            detail.onload = detail.onerror = null;
+            frame.replaceChildren(detail);
+            pendingImage = null;
+            photoError.hidden = true;
+            stage.setAttribute('aria-busy', 'false');
+          };
+          detail.onerror = () => {
+            if (!viewer.open || request !== revision) return;
+            pendingImage = null;
+            stage.setAttribute('aria-busy', 'false');
+            photoError.hidden = preview.complete && preview.naturalWidth > 0;
+          };
+          detail.src = thumbnail.dataset.full;
+        }, 120);
+      }
+
+      gallery.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-index]');
+        if (!button) return;
+        showPhoto(photos.indexOf(button));
+        viewer.showModal();
+      });
+
+      document.querySelector('#previous').addEventListener('click', () => showPhoto(current - 1));
+      document.querySelector('#next').addEventListener('click', () => showPhoto(current + 1));
+      viewer.addEventListener('keydown', (e) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          showPhoto(current + (e.key === 'ArrowRight' ? 1 : -1));
+        }
+      });
+
+      stage.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary) { resetGesture(); return; }
+        if (e.button !== 0) return;
+        gesture = { id: e.pointerId, x: e.clientX, y: e.clientY };
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', (e) => {
+        if (!gesture || e.pointerId !== gesture.id) return;
+        const dx = e.clientX - gesture.x;
+        const dy = e.clientY - gesture.y;
+        if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+          frame.classList.add('dragging');
+          frame.style.transform = `translateX(${Math.max(-72, Math.min(72, dx * .35))}px)`;
+        }
+      });
+      stage.addEventListener('pointerup', (e) => {
+        if (!gesture || e.pointerId !== gesture.id) return;
+        const dx = e.clientX - gesture.x;
+        const dy = e.clientY - gesture.y;
+        resetGesture();
+        if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          showPhoto(current + (dx < 0 ? 1 : -1));
+        }
+      });
+      stage.addEventListener('pointercancel', resetGesture);
+      stage.addEventListener('lostpointercapture', resetGesture);
+      viewer.addEventListener('close', () => {
+        revision++;
+        cancelDetail();
+        resetGesture();
+        frame.replaceChildren();
+        stage.setAttribute('aria-busy', 'false');
+      });
+    </script>
+  </body>
+</html>
